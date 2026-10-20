@@ -78,12 +78,14 @@ func storageSettingsForm(settings models.StorageSettings, storageGB string, erro
 				HasError:   validation.FieldError(errors, "s3_bucket") != "",
 			}),
 			components.InputField(components.InputProps{
-				Label:      "S3 endpoint",
-				Name:       "s3_endpoint",
-				Type:       components.InputTypeText,
-				Value:      settings.S3Endpoint,
-				HelperText: validation.FieldError(errors, "s3_endpoint"),
-				HasError:   validation.FieldError(errors, "s3_endpoint") != "",
+				Label:       "S3 endpoint",
+				Name:        "s3_endpoint",
+				Type:        components.InputTypeText,
+				Value:       settings.S3Endpoint,
+				Placeholder: "https://s3.eu-north-1.amazonaws.com (leave blank for AWS)",
+				Description: "Leave blank for AWS S3, or specify your endpoint for S3-compatible providers (R2, MinIO, Wasabi, etc.)",
+				HelperText:  validation.FieldError(errors, "s3_endpoint"),
+				HasError:    validation.FieldError(errors, "s3_endpoint") != "",
 			}),
 			components.InputField(components.InputProps{
 				Label: "S3 region",
@@ -91,6 +93,15 @@ func storageSettingsForm(settings models.StorageSettings, storageGB string, erro
 				Type:  components.InputTypeText,
 				Value: settings.S3Region,
 			}),
+			h.Label(
+				h.Class("setup-checkbox"),
+				h.Input(
+					g.Attr("type", "checkbox"),
+					g.Attr("name", "s3_use_path_style"),
+					g.If(settings.S3UsePathStyle, g.Attr("checked", "checked")),
+				),
+				h.Span(g.Text("Use path-style addressing")),
+			),
 		),
 		components.Button(components.ButtonProps{
 			Text:     "Save storage settings",

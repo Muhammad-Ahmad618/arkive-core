@@ -65,12 +65,8 @@ func (c *Client) PresignUpload(ctx context.Context, key, contentType string, con
 	}
 
 	input := &s3.PutObjectInput{
-		Bucket:        aws.String(c.bucket),
-		Key:           aws.String(key),
-		ContentLength: aws.Int64(contentLength),
-	}
-	if contentType != "" {
-		input.ContentType = aws.String(contentType)
+		Bucket: aws.String(c.bucket),
+		Key:    aws.String(key),
 	}
 
 	var opts []func(*s3.PresignOptions)
@@ -169,11 +165,10 @@ func (c *Client) PresignUploadPart(ctx context.Context, key, uploadID string, pa
 	}
 
 	input := &s3.UploadPartInput{
-		Bucket:        aws.String(c.bucket),
-		Key:           aws.String(key),
-		UploadId:      aws.String(uploadID),
-		PartNumber:    aws.Int32(partNumber),
-		ContentLength: aws.Int64(contentLength),
+		Bucket:     aws.String(c.bucket),
+		Key:        aws.String(key),
+		UploadId:   aws.String(uploadID),
+		PartNumber: aws.Int32(partNumber),
 	}
 
 	var opts []func(*s3.PresignOptions)

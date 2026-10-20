@@ -731,6 +731,12 @@ export class UploadRunner {
 		}
 		const etag = response.headers.get("etag") || response.headers.get("ETag") || "";
 		if (started.providerUploadId) {
+			if (!etag) {
+				throw toAppError(null, {
+					code: "upload_failed",
+					message: "S3 multipart upload failed: ETag header is missing. Please ensure your S3 bucket CORS configuration has ExposeHeaders: ['ETag']."
+				});
+			}
 			await this.runWithController(async (signal) => {
 				return recordUploadPart(started.uploadSessionId, {
 					partNumber: partNumber,
