@@ -88,6 +88,14 @@
   background: var(--accent);
 }
 
+/* The shell upload panel is adopted into this slot on the dashboard; neutralize
+   the shell-tray positioning so it renders inline like the old section. */
+#dashboard-upload-slot .app-upload-tray {
+  margin-left: 0;
+  padding: 0;
+  border-top: 0;
+}
+
 .dashboard-activity {
   display: grid;
   gap: 12px;

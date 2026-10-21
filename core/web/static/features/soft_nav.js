@@ -216,6 +216,12 @@ async function swapPage(doc, nextContent, url, options, token) {
 
   document.title = doc.title || document.title;
   const appContent = document.querySelector(".app-content");
+  // The dashboard adopts the upload tray into its content; pull it back to the
+  // shell so replaceChildren cannot destroy it (and any running upload).
+  const uploadTray = document.querySelector(".app-upload-tray");
+  if (uploadTray && appContent.contains(uploadTray)) {
+    appContent.after(uploadTray);
+  }
   const nodes = Array.from(nextContent.childNodes).map(function(node) {
     return document.importNode(node, true);
   });

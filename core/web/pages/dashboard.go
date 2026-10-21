@@ -90,6 +90,12 @@ func DashboardPage(props DashboardPageProps) web.Page {
 						)),
 					),
 				),
+				// The shell upload panel is moved into this slot by dashboard.js
+				// (same DOM node, keeps listeners) so the dashboard keeps its
+				// summary → upload → recent files order.
+				h.Div(
+					h.ID("dashboard-upload-slot"),
+				),
 				h.Section(
 					h.Class("dashboard-activity"),
 					h.ID("recent-activity"),
