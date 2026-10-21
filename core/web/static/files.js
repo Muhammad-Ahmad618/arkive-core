@@ -1,3 +1,4 @@
+import { markModuleLoaded } from "./features/soft_nav.js";
 import { setButtonBusy } from "./features/button_state.js";
 import { Dialog } from "./features/dialog.js";
 import { ArkiveFileReader } from "./features/file_reader.js";
@@ -10,7 +11,17 @@ import { thumbnailCache } from "./upload/thumbnail_cache.js";
 
 export const filesActions = {};
 
-(function() {
+let pageSignal = new AbortController();
+
+export function cleanupPage() {
+  pageSignal.abort();
+  pageSignal = new AbortController();
+}
+
+export function initPage() {
+  cleanupPage();
+
+  (function() {
   async function downloadFile(fileId, trigger) {
     if (!fileId) {
       return;
@@ -43,7 +54,7 @@ export const filesActions = {};
     }
     event.preventDefault();
     await downloadFile(target.getAttribute("data-file-id"), target);
-  });
+  }, { signal: pageSignal.signal });
 })();
 
 (function() {
@@ -264,7 +275,7 @@ export const filesActions = {};
       return;
     }
     openDialog([{ id: fileId, type: "file" }]);
-  });
+  }, { signal: pageSignal.signal });
 
   if (cancelButton) {
     cancelButton.addEventListener("click", function() {
@@ -329,7 +340,7 @@ export const filesActions = {};
       return;
     }
     openDialog(selectedEntries);
-  });
+  }, { signal: pageSignal.signal });
 })();
 
 (function() {
@@ -786,7 +797,7 @@ export const filesActions = {};
       return;
     }
     openShareDialog(fileId, button.getAttribute("data-file-name") || "");
-  });
+  }, { signal: pageSignal.signal });
 
   if (copyButton) {
     copyButton.addEventListener("click", async function() {
@@ -1031,4 +1042,9 @@ export const filesActions = {};
       closeShareDialog();
     });
   }
-})();
+  })();
+}
+
+initPage();
+
+markModuleLoaded(new URL(import.meta.url).pathname);

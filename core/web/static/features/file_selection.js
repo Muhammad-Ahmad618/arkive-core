@@ -603,7 +603,6 @@ function bindSelectionActions() {
   }
   bar.setAttribute("data-selection-actions-bound", "true");
 
-  const countLabel = document.getElementById("files-selection-count");
   const moveButton = document.getElementById("files-selection-move");
   const deleteButton = document.getElementById("files-selection-delete");
 
@@ -614,16 +613,41 @@ function bindSelectionActions() {
     deleteButton.addEventListener("click", requestDeleteSelected);
   }
 
+  if (document.body.hasAttribute("data-selection-actions-doc-bound")) {
+    return;
+  }
+  document.body.setAttribute("data-selection-actions-doc-bound", "true");
+
   document.addEventListener("arkive:selection-change", function(event) {
+    // Re-query: the toolbar lives in the swapped page content, so the node
+    // captured here is replaced by a soft navigation.
+    const liveBar = document.getElementById("files-selection-actions");
+    const liveCount = document.getElementById("files-selection-count");
+    if (!liveBar) {
+      return;
+    }
     const selected = (event && event.detail && event.detail.selectedEntries) || [];
-    bar.hidden = selected.length === 0;
-    if (countLabel) {
-      countLabel.textContent = selected.length + (selected.length === 1 ? " item selected" : " items selected");
+    liveBar.hidden = selected.length === 0;
+    if (liveCount) {
+      liveCount.textContent = selected.length + (selected.length === 1 ? " item selected" : " items selected");
     }
   });
 }
 
+function clearDetachedSelection() {
+  // After a soft navigation the selected ids no longer resolve to any node on
+  // the page; keep the selection state from leaking into the new page.
+  const detached = selectedEntries().some(function(entry) {
+    return !findEntryByID(entry.id);
+  });
+  if (detached) {
+    clearSelection({ silent: true });
+  }
+}
+
 export function initFileSelection() {
+  clearDetachedSelection();
+
   const entries = selectableEntries();
   if (!entries.length) {
     return;

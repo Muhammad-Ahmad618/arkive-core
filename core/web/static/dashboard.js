@@ -13,6 +13,11 @@
   }
 
   rows.forEach(function(row) {
+    if (row.hasAttribute("data-activity-open-bound")) {
+      return;
+    }
+    row.setAttribute("data-activity-open-bound", "true");
+
     row.addEventListener("click", function(event) {
       if (event.target.closest("a, button, input, label")) {
         return;

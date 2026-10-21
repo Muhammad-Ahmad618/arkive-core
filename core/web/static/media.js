@@ -7,8 +7,25 @@ import { initPlyr } from "./plyr.js";
 import { apiRequest } from "./lib/api.js";
 import { showAppError } from "./lib/toasts.js";
 import { thumbnailCache } from "./upload/thumbnail_cache.js";
+import { onBeforeSwap } from "./features/soft_nav.js";
 
-(function() {
+let pageSignal = new AbortController();
+let pageTeardown = null;
+
+export function cleanupPage() {
+  pageSignal.abort();
+  pageSignal = new AbortController();
+  const teardown = pageTeardown;
+  pageTeardown = null;
+  if (teardown) {
+    teardown();
+  }
+}
+
+export function initPage() {
+  cleanupPage();
+
+  (function() {
   function parsePreviewLimit(value, fallback) {
     const parsed = Number.parseInt(String(value || ""), 10);
     if (!Number.isFinite(parsed) || parsed <= 0) {
@@ -48,6 +65,12 @@ import { thumbnailCache } from "./upload/thumbnail_cache.js";
   const fileId = actionsPanel.getAttribute("data-media-file-id");
   const reader = new ArkiveFileReader({ fileId: fileId });
   const readerReady = reader.load();
+
+  pageTeardown = function() {
+    disposeStream();
+    revokePreviewURL();
+    reader.dispose();
+  };
   const IMAGE_PREVIEW_MAX_BYTES = parsePreviewLimit(mediaRoot && mediaRoot.getAttribute("data-preview-image-max-bytes"), 50 * 1024 * 1024);
   const SMALL_VIDEO_MAX_BYTES = parsePreviewLimit(mediaRoot && mediaRoot.getAttribute("data-preview-video-max-bytes"), 128 * 1024 * 1024);
   const TEXT_PREVIEW_MAX_BYTES = parsePreviewLimit(mediaRoot && mediaRoot.getAttribute("data-preview-text-max-bytes"), 2 * 1024 * 1024);
@@ -512,8 +535,17 @@ import { thumbnailCache } from "./upload/thumbnail_cache.js";
     });
 
   window.addEventListener("pagehide", function() {
-    disposeStream();
-    revokePreviewURL();
-    reader.dispose();
-  });
-})();
+    const teardown = pageTeardown;
+    pageTeardown = null;
+    if (teardown) {
+      teardown();
+    }
+  }, { signal: pageSignal.signal });
+  })();
+}
+
+onBeforeSwap(function() {
+  cleanupPage();
+});
+
+initPage();
