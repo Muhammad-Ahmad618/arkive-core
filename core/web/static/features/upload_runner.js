@@ -591,6 +591,9 @@ export class UploadRunner {
 				const response = await this.runWithController(async (signal) => {
 					return fetch(presigned.url, {
 						method: "PUT",
+						headers: {
+							"Content-Type": thumbnail.mime,
+						},
 						body: encrypted.encryptedThumbnail,
 						signal: signal,
 					});
@@ -719,6 +722,9 @@ export class UploadRunner {
 		const response = await this.runWithController(async (signal) => {
 			return fetch(presigned.url, {
 				method: "PUT",
+				headers: {
+					"Content-Type": "application/octet-stream",
+				},
 				body: uploadBody,
 				signal: signal,
 			});
