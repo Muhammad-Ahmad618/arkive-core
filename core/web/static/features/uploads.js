@@ -112,6 +112,15 @@ export async function initUploads() {
 		showStartDialog(selectedFiles.length);
 		input.value = "";
 	});
+	// Files may have been set on the input before this listener was bound
+	// (the limits fetch above is async); the change event is lost but the
+	// selection persists, so replay it now that the panel is ready.
+	if (input.files && input.files.length) {
+		selectedFiles = Array.from(input.files);
+		showSelectedFiles(selectedFiles);
+		showStartDialog(selectedFiles.length);
+		input.value = "";
+	}
 
 	dropzone && dropzone.addEventListener("dragover", function (e) { e.preventDefault(); dropzone.classList.add("is-dragover"); });
 	dropzone && dropzone.addEventListener("dragleave", function () { dropzone.classList.remove("is-dragover"); });
