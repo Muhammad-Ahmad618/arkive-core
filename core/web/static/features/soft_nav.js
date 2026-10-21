@@ -61,10 +61,6 @@ function isModifiedClick(event) {
   return event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey;
 }
 
-function isDashboardPath(pathname) {
-  return String(pathname || "").replace(/\/+$/, "") === "/dashboard";
-}
-
 function parseURL(href) {
   try {
     return new URL(href, window.location.href);
@@ -97,10 +93,6 @@ function isSoftNavTarget(anchor, url) {
   if (url.pathname === window.location.pathname && url.search === window.location.search) {
     return false;
   }
-  // Phase 1 only: the dashboard owns the upload panel, so it always full-loads.
-  if (isDashboardPath(url.pathname)) {
-    return false;
-  }
   return true;
 }
 
@@ -114,10 +106,6 @@ function onDocumentClick(event) {
   }
   const url = parseURL(anchor.href);
   if (!isSoftNavTarget(anchor, url)) {
-    return;
-  }
-  // While an upload is queued or running, keep the existing confirm + unload flow.
-  if (window.uploadPageHasLargeFile) {
     return;
   }
   event.preventDefault();
@@ -139,10 +127,6 @@ function onPopState() {
   }
   const locationKey = url.pathname + url.search;
   if (locationKey === renderedLocation) {
-    return;
-  }
-  if (isDashboardPath(url.pathname)) {
-    window.location.reload();
     return;
   }
   navigate(url, { push: false });

@@ -91,16 +91,6 @@ func DashboardPage(props DashboardPageProps) web.Page {
 					),
 				),
 				h.Section(
-					h.Class("dashboard-upload"),
-					h.ID("upload-panel"),
-					components.UploadControls(components.UploadControlsProps{
-						InputRequired:   true,
-						InputLabel:      "Secure Upload",
-						InputHelper:     "Drag and drop files here to begin encrypted upload. Data is encrypted in browser before transfer.",
-						StatusText:      "Select files manually to start a secure upload.",
-					}),
-				),
-				h.Section(
 					h.Class("dashboard-activity"),
 					h.ID("recent-activity"),
 					h.Div(

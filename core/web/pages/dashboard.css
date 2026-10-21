@@ -88,10 +88,6 @@
   background: var(--accent);
 }
 
-.dashboard-upload {
-  border-radius: 6px;
-}
-
 .dashboard-activity {
   display: grid;
   gap: 12px;

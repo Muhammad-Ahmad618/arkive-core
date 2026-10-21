@@ -48,6 +48,18 @@ func AuthLayout(data LayoutData, content ...g.Node) g.Node {
 				}),
 				h.Div(h.Class("sidebar-scrim"), g.Attr("aria-hidden", "true")),
 				h.Div(h.Class("app-content"), g.Group(content)),
+				// The upload panel lives in the shell (outside .app-content) so an
+				// in-progress upload survives soft navigation between pages.
+				h.Section(
+					h.Class("app-upload-tray"),
+					h.ID("upload-panel"),
+					components.UploadControls(components.UploadControlsProps{
+						InputRequired: true,
+						InputLabel:    "Secure Upload",
+						InputHelper:   "Drag and drop files here to begin encrypted upload. Data is encrypted in browser before transfer.",
+						StatusText:    "Select files manually to start a secure upload.",
+					}),
+				),
 			),
 			components.SearchPalette(data.SearchPlaceholder),
 			components.ToastHost(),

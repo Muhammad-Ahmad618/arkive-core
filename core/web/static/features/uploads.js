@@ -72,7 +72,6 @@ export async function initUploads() {
 
 	runner.onState(function (nextState) {
 		state = nextState || state;
-		syncUploadPageRetention();
 		scheduleRender();
 	});
 	runner.onEvent(function (event) {
@@ -110,7 +109,6 @@ export async function initUploads() {
 		if (!input.files || !input.files.length) return;
 		selectedFiles = Array.from(input.files);
 		showSelectedFiles(selectedFiles);
-		syncUploadPageRetention();
 		showStartDialog(selectedFiles.length);
 		input.value = "";
 	});
@@ -123,7 +121,6 @@ export async function initUploads() {
 		if (e.dataTransfer.files && e.dataTransfer.files.length) {
 			selectedFiles = Array.from(e.dataTransfer.files);
 			showSelectedFiles(selectedFiles);
-			syncUploadPageRetention();
 			showStartDialog(selectedFiles.length);
 		}
 	});
@@ -131,7 +128,6 @@ export async function initUploads() {
 	uploadChipClear && uploadChipClear.addEventListener("click", function () {
 		selectedFiles = [];
 		hideSelectedFiles();
-		syncUploadPageRetention();
 	});
 
 	confirmStart && confirmStart.addEventListener("click", function () {
@@ -143,7 +139,6 @@ export async function initUploads() {
 			});
 			selectedFiles = [];
 			hideSelectedFiles();
-			syncUploadPageRetention();
 		}
 	});
 
@@ -151,7 +146,6 @@ export async function initUploads() {
 		hideDialog();
 		selectedFiles = [];
 		hideSelectedFiles();
-		syncUploadPageRetention();
 	});
 
 	abortButton && abortButton.addEventListener("click", function () {
@@ -184,7 +178,6 @@ export async function initUploads() {
 		hideSelectedFiles();
 		clearInputSelection();
 		runner.cancelActiveUploadsBestEffort();
-		syncUploadPageRetention();
 	});
 
 	window.addEventListener("pageshow", function (event) {
@@ -192,37 +185,6 @@ export async function initUploads() {
 		selectedFiles = [];
 		hideSelectedFiles();
 		clearInputSelection();
-		syncUploadPageRetention();
-	});
-
-	document.addEventListener("click", function (event) {
-		const target = event.target;
-		if (!target || !target.closest || !pageRetainsUploadData()) return;
-		const link = target.closest("a[href]");
-		if (!link) return;
-		if (link.hasAttribute("download")) return;
-		if (link.target && link.target !== "_self") return;
-		if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-		const href = link.getAttribute("href") || "";
-		if (!href || href.charAt(0) === "#") return;
-		let url = null;
-		try {
-			url = new URL(link.href, window.location.href);
-		} catch (_) {
-			return;
-		}
-		if (url.origin !== window.location.origin) return;
-		if (url.pathname === window.location.pathname && url.search === window.location.search && url.hash === window.location.hash) return;
-		const ok = window.confirm("Upload in progress. Leaving this page will cancel it.");
-		if (!ok) {
-			event.preventDefault();
-			return;
-		}
-		selectedFiles = [];
-		hideSelectedFiles();
-		clearInputSelection();
-		runner.cancelActiveUploadsBestEffort();
-		syncUploadPageRetention();
 	});
 
 	function setStatus(text) { status.textContent = text; }
@@ -284,9 +246,6 @@ export async function initUploads() {
 		return selectedFiles.length > 0 || runner.hasActiveUploads();
 	}
 
-	function syncUploadPageRetention() {
-		window.uploadPageHasLargeFile = pageRetainsUploadData();
-	}
 
 	function scheduleRender() {
 		if (renderScheduled) return;
