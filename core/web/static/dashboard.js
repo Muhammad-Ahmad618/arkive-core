@@ -21,7 +21,7 @@
     if (!href) {
       return;
     }
-    window.location.href = href;
+    window.softNavigate(href);
   }
 
   rows.forEach(function(row) {

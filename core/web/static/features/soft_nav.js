@@ -132,7 +132,13 @@ function onPopState() {
   navigate(url, { push: false });
 }
 
-async function navigate(url, options) {
+export async function navigate(url, options) {
+  if (typeof url === "string") {
+    url = parseURL(url);
+    if (!url) {
+      return;
+    }
+  }
   const token = ++navToken;
   if (activeFetchController) {
     activeFetchController.abort();
@@ -202,6 +208,12 @@ async function navigate(url, options) {
 
   await swapPage(doc, nextContent, url, options, token);
 }
+
+// Classic scripts (e.g. dashboard.js) cannot import modules; expose the same
+// soft navigation as a global entry point.
+window.softNavigate = function (href) {
+  return navigate(href, { push: true });
+};
 
 async function swapPage(doc, nextContent, url, options, token) {
   syncStyles(doc);

@@ -1,4 +1,4 @@
-import { markModuleLoaded } from "./features/soft_nav.js";
+import { markModuleLoaded, navigate } from "./features/soft_nav.js";
 import { setButtonBusy } from "./features/button_state.js";
 import { Dialog } from "./features/dialog.js";
 import { ArkiveFileReader } from "./features/file_reader.js";
@@ -67,7 +67,7 @@ export function initPage() {
     }
     const href = node.getAttribute("data-file-open") || node.getAttribute("data-folder-open") || "";
     if (href) {
-      window.location.href = href;
+      navigate(href, { push: true });
     }
   }
 

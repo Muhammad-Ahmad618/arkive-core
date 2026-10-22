@@ -7,7 +7,7 @@ import { initPlyr } from "./plyr.js";
 import { apiRequest } from "./lib/api.js";
 import { showAppError } from "./lib/toasts.js";
 import { thumbnailCache } from "./upload/thumbnail_cache.js";
-import { onBeforeSwap } from "./features/soft_nav.js";
+import { onBeforeSwap, navigate } from "./features/soft_nav.js";
 
 let pageSignal = new AbortController();
 let pageTeardown = null;
@@ -497,7 +497,7 @@ export function initPage() {
             return clearThumbnailCache(fileId)
             .catch(function() {})
             .then(function() {
-              window.location.href = "/files";
+              navigate("/files", { push: true });
             });
         })
         .catch(function(error) {

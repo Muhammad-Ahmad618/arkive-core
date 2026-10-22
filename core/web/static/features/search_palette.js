@@ -1,6 +1,7 @@
 import { apiRequest } from "../lib/api.js";
 import { thumbnailCache } from "../upload/thumbnail_cache.js";
 import { vault } from "./vault.js";
+import { navigate } from "./soft_nav.js";
 
 const SEARCH_DEBOUNCE_MS = 300;
 const MIN_SEARCH_QUERY_LEN = 1;
@@ -419,7 +420,7 @@ export function initSearchPalette() {
     if (event.key === "Enter") {
       if (!flatItems.length) return;
       event.preventDefault();
-      window.location.href = flatItems[activeIndex].dataset.url;
+      navigate(flatItems[activeIndex].dataset.url, { push: true });
     }
   });
 
