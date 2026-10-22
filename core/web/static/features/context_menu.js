@@ -300,7 +300,7 @@ function showMenu(items, x, y, entry, selection) {
   positionMenu(root, x, y);
   const firstButton = root.querySelector(".files-context-menu-item:not(:disabled)");
   if (firstButton) {
-    firstButton.focus();
+    firstButton.focus({ preventScroll: true });
   }
 }
 
