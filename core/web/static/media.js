@@ -1,6 +1,7 @@
 import { setButtonBusy } from "./features/button_state.js";
 import { ArkiveFileReader } from "./features/file_reader.js";
-import { canDownloadInCurrentBrowser, isDownloadAbortError, maybeShowDownloadCapabilityWarning, showDownloadError, showServiceWorkerDownloadNotice } from "./features/reader/download_warning.js";
+import { cancelActiveDownload, downloadFile } from "./features/download_manager.js";
+import { canDownloadInCurrentBrowser, maybeShowDownloadCapabilityWarning } from "./features/reader/download_warning.js";
 import { mountStreamingMedia } from "./features/streaming/stream_player.js";
 import { filesActions } from "./files.js";
 import { initPlyr } from "./plyr.js";
@@ -46,15 +47,6 @@ export function initPage() {
   const dimensionsField = document.querySelector("[data-media-field='media-dimensions']");
   const downloadButton = document.getElementById("media-download-button");
   const downloadWarning = document.getElementById("download-warning");
-  const downloadQueue = document.getElementById("download-queue");
-  const downloadQueueMeta = document.getElementById("download-queue-meta");
-  const downloadQueueItem = document.getElementById("download-queue-item");
-  const progressFill = document.getElementById("download-progress-fill");
-  const progressText = document.getElementById("download-progress-text");
-  const statusBadge = document.getElementById("download-status-badge");
-  const statusDetail = document.getElementById("download-status-detail");
-  const fileLabel = document.getElementById("download-file-label");
-  const cancelDownloadButton = document.getElementById("download-cancel");
   const shareButton = document.getElementById("media-share-button");
   const deleteButton = document.getElementById("media-delete-button");
 
@@ -76,9 +68,6 @@ export function initPage() {
   const TEXT_PREVIEW_MAX_BYTES = parsePreviewLimit(mediaRoot && mediaRoot.getAttribute("data-preview-text-max-bytes"), 2 * 1024 * 1024);
   let currentPreviewURL = "";
   let currentStream = null;
-  let activeDownloadController = null;
-  let hideDownloadQueueTimer = 0;
-  let downloadCancelledByUser = false;
 
   if (downloadButton) {
     downloadButton.disabled = true;
@@ -277,75 +266,6 @@ export function initPage() {
     );
   }
 
-  function clearHideDownloadQueueTimer() {
-    if (!hideDownloadQueueTimer) {
-      return;
-    }
-    window.clearTimeout(hideDownloadQueueTimer);
-    hideDownloadQueueTimer = 0;
-  }
-
-  function setDownloadState(state, detail) {
-    if (downloadQueueItem) {
-      downloadQueueItem.className = "queue-item" + (state === "complete" ? " is-complete" : state === "error" || state === "cancelled" ? " is-error" : "");
-    }
-    if (statusBadge) {
-      statusBadge.className = "queue-item-badge is-" + state;
-      statusBadge.textContent = state;
-    }
-    if (statusDetail) {
-      statusDetail.textContent = detail || state;
-    }
-    if (downloadQueueMeta) {
-      downloadQueueMeta.textContent = state === "running" ? "1 item active" : "0 items active";
-    }
-    if (cancelDownloadButton) {
-      cancelDownloadButton.hidden = state !== "running";
-    }
-  }
-
-  function showDownloadQueue(fileName) {
-    clearHideDownloadQueueTimer();
-    if (downloadQueue) {
-      downloadQueue.hidden = false;
-    }
-    if (fileLabel) {
-      fileLabel.textContent = fileName || "Encrypted file";
-    }
-  }
-
-  function hideDownloadQueueSoon() {
-    clearHideDownloadQueueTimer();
-    hideDownloadQueueTimer = window.setTimeout(function() {
-      if (downloadQueue) {
-        downloadQueue.hidden = true;
-      }
-    }, 1200);
-  }
-
-  function updateDownloadProgress(written, total) {
-    showDownloadQueue((reader.getMetadata() && reader.getMetadata().name) || "Encrypted file");
-    const pct = total > 0 ? Math.round((written / total) * 100) : 0;
-    if (progressFill) {
-      progressFill.style.width = pct + "%";
-    }
-    if (progressText) {
-      progressText.textContent = pct + "% - " + formatBytes(written) + " of " + formatBytes(total);
-    }
-    setDownloadState("running", "Downloading");
-  }
-
-  function resetDownloadProgress() {
-    clearHideDownloadQueueTimer();
-    if (progressFill) {
-      progressFill.style.width = "0%";
-    }
-    if (progressText) {
-      progressText.textContent = "0 B / 0 B";
-    }
-    setDownloadState("queued", "queued");
-  }
-
   async function renderPreview() {
     await readerReady;
     const metadata = reader.getMetadata();
@@ -396,77 +316,12 @@ export function initPage() {
   }
 
   if (downloadButton) {
-    downloadButton.addEventListener("click", async function(event) {
+    downloadButton.addEventListener("click", function(event) {
       event.preventDefault();
-      downloadButton.disabled = true;
-      if (downloadWarning) {
-        downloadWarning.innerHTML = "";
-      }
-      resetDownloadProgress();
-      activeDownloadController = new AbortController();
-      downloadCancelledByUser = false;
-      showDownloadQueue((reader.getMetadata() && reader.getMetadata().name) || "Encrypted file");
-      setDownloadState("running", "Preparing");
-      try {
-        const result = await reader.download({
-          warningContainer: downloadWarning,
-          onProgress: function(progress) {
-            updateDownloadProgress(progress.written, progress.total);
-          },
-          signal: activeDownloadController.signal,
-        });
-        if (result && result.mode === "warning") {
-          if (downloadQueue) {
-            downloadQueue.hidden = true;
-          }
-          return;
-        }
-        if (result && result.mode === "service-worker" && downloadWarning) {
-          showServiceWorkerDownloadNotice(downloadWarning);
-        }
-        setDownloadState("complete", result && result.mode === "service-worker" ? "Browser download started" : "Saved");
-        hideDownloadQueueSoon();
-      } catch (error) {
-        if (isDownloadAbortError(error)) {
-          if (downloadCancelledByUser) {
-            hideDownloadQueueSoon();
-          } else if (downloadQueue) {
-            downloadQueue.hidden = true;
-          }
-          return;
-        }
-        setDownloadState("error", "Download failed");
-        if (downloadWarning) {
-          showDownloadError(
-            downloadWarning,
-            (error && error.message) || "Download failed.",
-          );
-        }
-        showAppError(error, {
-          code: "download_failed",
-          message: "Download failed.",
-        });
-      } finally {
-        activeDownloadController = null;
-        downloadButton.disabled = false;
-      }
-    });
-  }
-
-  if (cancelDownloadButton) {
-    cancelDownloadButton.addEventListener("click", function() {
-      if (!activeDownloadController) {
-        return;
-      }
-      downloadCancelledByUser = true;
-      activeDownloadController.abort();
-      activeDownloadController = null;
-      if (downloadWarning) {
-        downloadWarning.innerHTML = "";
-      }
-      setDownloadState("cancelled", "Cancelled");
-      hideDownloadQueueSoon();
-      downloadButton.disabled = false;
+      downloadFile(fileId, {
+        trigger: downloadButton,
+        warningContainer: downloadWarning,
+      });
     });
   }
 
@@ -534,7 +389,11 @@ export function initPage() {
       }
     });
 
+  // Soft navigation away keeps any active download alive: the transfer manager
+  // owns its own reader, so disposing the preview here cannot kill it. Only a
+  // real unload (pagehide) cancels the in-flight download.
   window.addEventListener("pagehide", function() {
+    cancelActiveDownload();
     const teardown = pageTeardown;
     pageTeardown = null;
     if (teardown) {

@@ -1,7 +1,7 @@
 import { markModuleLoaded, navigate } from "./features/soft_nav.js";
 import { setButtonBusy } from "./features/button_state.js";
 import { Dialog } from "./features/dialog.js";
-import { ArkiveFileReader } from "./features/file_reader.js";
+import { downloadFile } from "./features/download_manager.js";
 import { entrySelection } from "./features/file_selection.js";
 import { Toast } from "./features/toast.js";
 import { vault, waitUntilReady } from "./features/vault.js";
@@ -22,29 +22,6 @@ export function initPage() {
   cleanupPage();
 
   (function() {
-  async function downloadFile(fileId, trigger) {
-    if (!fileId) {
-      return;
-    }
-    if (trigger) {
-      trigger.disabled = true;
-    }
-    const reader = new ArkiveFileReader({ fileId: fileId });
-    try {
-      await reader.download();
-    } catch (error) {
-      showAppError(error, {
-        code: "download_failed",
-        message: "Download failed.",
-      });
-    } finally {
-      if (trigger) {
-        trigger.disabled = false;
-      }
-      await reader.dispose();
-    }
-  }
-
   filesActions.downloadFile = downloadFile;
 
   document.addEventListener("click", async function(event) {
@@ -53,7 +30,7 @@ export function initPage() {
       return;
     }
     event.preventDefault();
-    await downloadFile(target.getAttribute("data-file-id"), target);
+    await downloadFile(target.getAttribute("data-file-id"), { trigger: target });
   }, { signal: pageSignal.signal });
 })();
 

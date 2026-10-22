@@ -62,6 +62,13 @@ func AuthLayout(data LayoutData, content ...g.Node) g.Node {
 						StatusText:    "Select files manually to start a secure upload.",
 					}),
 				),
+				// The download status panel lives in the shell for the same reason:
+				// a running download survives soft navigation between pages.
+				// auth_layout.css keeps it hidden until a download is active.
+				h.Section(
+					h.Class("app-download-tray"),
+					components.DownloadStatus("app-download-queue"),
+				),
 			),
 			components.SearchPalette(data.SearchPlaceholder),
 			components.ToastHost(),
