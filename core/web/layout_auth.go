@@ -37,6 +37,8 @@ func AuthLayout(data LayoutData, content ...g.Node) g.Node {
 		h.Head(headNodes...),
 		h.Body(
 			components.InlineStyle(components.AuthLayoutCSS),
+			// data-page keys the upload-tray visibility rule in auth_layout.css.
+			g.If(data.PagePath != "", g.Attr("data-page", data.PagePath)),
 			g.If(data.RequireVaultUnlock, g.Attr("data-require-vault-unlock", "true")),
 			g.If(data.User != nil && strings.TrimSpace(data.User.ID) != "", g.Attr("data-vault-id", strings.TrimSpace(data.User.ID))),
 			h.Div(

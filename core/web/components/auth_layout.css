@@ -137,10 +137,17 @@
   overflow-x: clip;
 }
 
+/* Mounted in the shell on every auth page (so uploads survive navigation), but
+   only visible on the dashboard. data-page is the current page path. */
 .app-upload-tray {
+  display: none;
   margin-left: 240px;
   padding: 24px 20px 40px;
   border-top: 1px solid var(--border);
+}
+
+body[data-page="/dashboard"] .app-upload-tray {
+  display: block;
 }
 
 body.sidebar-collapsed .app-header,

@@ -240,6 +240,9 @@ async function swapPage(doc, nextContent, url, options, token) {
   appContent.replaceChildren.apply(appContent, nodes);
 
   renderedLocation = url.pathname + url.search;
+  // Keys the upload-tray visibility rule (auth_layout.css): only the dashboard
+  // shows it; every other page hides the same still-mounted node.
+  document.body.setAttribute("data-page", url.pathname);
   if (options.push) {
     history.pushState({ arkiveSoftNav: true, scrollX: 0, scrollY: 0 }, "", url.pathname + url.search + url.hash);
   }
